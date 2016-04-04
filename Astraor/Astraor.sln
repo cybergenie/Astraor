@@ -3,7 +3,11 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 14
 VisualStudioVersion = 14.0.24720.0
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Astraor", "Astraor\Astraor.csproj", "{A2BF46FA-E540-4C33-A323-A8946BD7D65E}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MainFrame", "MainFrame\MainFrame.csproj", "{7BA72B09-68E9-425B-9E6E-CB47C93548EC}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MeasurementSensors", "MeasurementSensors\MeasurementSensors.csproj", "{C825A77E-24EF-4F26-9F31-AC5245E89076}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DataManager", "DataManager\DataManager.csproj", "{D694DD33-CFFE-4B27-8D88-D9D261198C18}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -11,10 +15,18 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{A2BF46FA-E540-4C33-A323-A8946BD7D65E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{A2BF46FA-E540-4C33-A323-A8946BD7D65E}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{A2BF46FA-E540-4C33-A323-A8946BD7D65E}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{A2BF46FA-E540-4C33-A323-A8946BD7D65E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7BA72B09-68E9-425B-9E6E-CB47C93548EC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7BA72B09-68E9-425B-9E6E-CB47C93548EC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7BA72B09-68E9-425B-9E6E-CB47C93548EC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7BA72B09-68E9-425B-9E6E-CB47C93548EC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C825A77E-24EF-4F26-9F31-AC5245E89076}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C825A77E-24EF-4F26-9F31-AC5245E89076}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C825A77E-24EF-4F26-9F31-AC5245E89076}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C825A77E-24EF-4F26-9F31-AC5245E89076}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D694DD33-CFFE-4B27-8D88-D9D261198C18}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D694DD33-CFFE-4B27-8D88-D9D261198C18}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D694DD33-CFFE-4B27-8D88-D9D261198C18}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D694DD33-CFFE-4B27-8D88-D9D261198C18}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
