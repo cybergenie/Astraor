@@ -55,7 +55,7 @@ namespace MeasurementSensors
             return (true);
         }
 
-        public bool Open(enSensorType sensorType)
+        public virtual bool Open(enSensorType sensorType)
         {
             bool result = true;
 
@@ -64,36 +64,37 @@ namespace MeasurementSensors
             if (m_sensor != null)
             {
                 m_sensor.OnError += new sensor.ErrorHandler(OnError);
-                //get automatic parameters
+                //    //get automatic parameters
                 if (acqParamMeasurement.Init(m_sensor) == enSensorError.MCHR_ERROR_NONE)
                 {
-                    // Set buffer size (should be > 0)
-                    acqParamMeasurement.BufferLength = buffer_length;
-                    // Set Number of acquisition buffers per data (should be > 1)
-                    acqParamMeasurement.NumberOfBuffers = number_of_buffers;
-                    //set altitude and counter buffering enabled
-                    acqParamMeasurement.EnableBufferAltitude.Altitude = true;
-                    acqParamMeasurement.EnableBufferAltitude.Counter = true;
-                    //set timeout acquisition : should be at least = ((BufferLength * averaging) / rate) + 100
-                    acqParamMeasurement.Timeout = 2000;
-                    //event type (here end of measurements) and callback function
-                    acqParamMeasurement.EnableEvent.EventEndBuffer = true;
-                    m_sensor.OnEventMeasurement += new sensor.OnEventMeasurementHandler(FuncEventMeasurement);
+                    //        // Set buffer size (should be > 0)
+                    //        acqParamMeasurement.BufferLength = buffer_length;
+                    //        // Set Number of acquisition buffers per data (should be > 1)
+                    //        acqParamMeasurement.NumberOfBuffers = number_of_buffers;
+                    //        //set altitude and counter buffering enabled
+                    //        acqParamMeasurement.EnableBufferAltitude.Altitude = true;
+                    //        acqParamMeasurement.EnableBufferAltitude.Counter = true;
+                    //        //set timeout acquisition : should be at least = ((BufferLength * averaging) / rate) + 100
+                    //        acqParamMeasurement.Timeout = 2000;
+                    //        //event type (here end of measurements) and callback function
+                    //        acqParamMeasurement.EnableEvent.EventEndBuffer = true;
+                    //        m_sensor.OnEventMeasurement += new sensor.OnEventMeasurementHandler(FuncEventMeasurement);
                 }
                 else
-                {
-                    Close();
-                    result = false;
-                    throw new StilException("驱动初始化失败。");                    
-                    
+                        {
+                        Close();
+                        result = false;
+                        throw new StilException("驱动初始化失败。");
+
                 }
             }
             else
             {
                 result = false;
-                throw new StilException("错误 : 打开传感器失败,没有连接传感器或传感器损坏,请检查传感器。");                
+                throw new StilException("错误 : 打开传感器失败,没有连接传感器或传感器损坏,请检查传感器。");
             }
             return (result);
+
         }
 
         void OnError(object sender, cErrorEventArgs e)
