@@ -9,7 +9,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MeasurementSensors", "Measu
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DataManager", "DataManager\DataManager.csproj", "{D694DD33-CFFE-4B27-8D88-D9D261198C18}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "test", "test\test.csproj", "{C510E260-24C3-481B-92CA-5310662DA018}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "test", "..\test\test.csproj", "{C510E260-24C3-481B-92CA-5310662DA018}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
