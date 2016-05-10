@@ -3,15 +3,31 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Threading;
 using STIL_NET;
 
 namespace MeasurementSensors
 {
-    class MeasureNoTrigger:StilSensor
+    class MeasureNoTrigger
     {
-        public override bool Open(enSensorType sensorType)
+        public void GetPoints()
         {
-            return base.Open(sensorType);
+            StilSensor Sensor = new StilSensor();
+            Sensor.BufferLength = 5;
+            Sensor.PointsNumber = 2000;
+
+            if (Sensor!=null)
+                if(Sensor.Init())
+                    if(Sensor.OpenNoTrigger(enSensorType.CCS_OPTIMA))
+                    {
+                        Sensor.SetParameter();
+                        if(Sensor.StartAcquisition())
+                        {
+                            Thread mThread = new Thread(new ThreadStart());
+                        }
+                    }
+
+            
         }
     }
 }

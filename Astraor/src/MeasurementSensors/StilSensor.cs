@@ -12,9 +12,12 @@ namespace MeasurementSensors
         public delegate void SensorStatusHandler(object sender,EventArgs e);
         public event SensorStatusHandler OnSensorStatus;
 
+        private uint buffer_length = 0;
+        private uint number_of_buffers = 0; 
         private string sensorStatus = null;
         private dll_chr m_dll_chr = null;
         private sensor m_sensor = null;
+        private enSensorError sError = enSensorError.MCHR_ERROR_NONE;
         private sensorManager m_sensor_manager = new sensorManager();
         private cAcqParamMeasurement acqParamMeasurement = new cAcqParamMeasurement();
         private cNamedEvent m_measurement_event = new cNamedEvent();
@@ -31,6 +34,18 @@ namespace MeasurementSensors
                 OnSensorStatus(this, new EventArgs());
             }
 
+        }
+
+        public uint BufferLength
+        {
+            get { return buffer_length; }
+            set { buffer_length = value; }
+        }
+
+        public uint PointsNumber
+        {
+            get { return number_of_buffers; }
+            set { number_of_buffers = value; }
         }
 
         public bool Init()
@@ -55,7 +70,7 @@ namespace MeasurementSensors
             return (true);
         }
 
-        public virtual bool Open(enSensorType sensorType)
+        public virtual bool OpenNoTrigger(enSensorType sensorType)
         {
             bool result = true;
 
@@ -67,18 +82,18 @@ namespace MeasurementSensors
                 //    //get automatic parameters
                 if (acqParamMeasurement.Init(m_sensor) == enSensorError.MCHR_ERROR_NONE)
                 {
-                    //        // Set buffer size (should be > 0)
-                    //        acqParamMeasurement.BufferLength = buffer_length;
-                    //        // Set Number of acquisition buffers per data (should be > 1)
-                    //        acqParamMeasurement.NumberOfBuffers = number_of_buffers;
-                    //        //set altitude and counter buffering enabled
-                    //        acqParamMeasurement.EnableBufferAltitude.Altitude = true;
-                    //        acqParamMeasurement.EnableBufferAltitude.Counter = true;
-                    //        //set timeout acquisition : should be at least = ((BufferLength * averaging) / rate) + 100
-                    //        acqParamMeasurement.Timeout = 2000;
-                    //        //event type (here end of measurements) and callback function
-                    //        acqParamMeasurement.EnableEvent.EventEndBuffer = true;
-                    //        m_sensor.OnEventMeasurement += new sensor.OnEventMeasurementHandler(FuncEventMeasurement);
+                    // Set buffer size (should be > 0)
+                    acqParamMeasurement.BufferLength = buffer_length;
+                    // Set Number of acquisition buffers per data (should be > 1)
+                    acqParamMeasurement.NumberOfBuffers = number_of_buffers;
+                    //set altitude and counter buffering enabled
+                    acqParamMeasurement.EnableBufferAltitude.Altitude = true;
+                    acqParamMeasurement.EnableBufferAltitude.Counter = true;
+                    //set timeout acquisition : should be at least = ((BufferLength * averaging) / rate) + 100
+                    acqParamMeasurement.Timeout = 2000;
+                    //event type (here end of measurements) and callback function
+                    acqParamMeasurement.EnableEvent.EventEndBuffer = true;
+                    m_sensor.OnEventMeasurement += new sensor.OnEventMeasurementHandler(FuncEventMeasurement);
                 }
                 else
                         {
@@ -120,6 +135,36 @@ namespace MeasurementSensors
                     break;
             }
            throw new StilException(string.Format("Event : {0}", ev.ToString()));
+        }
+
+        public bool SetParameter()
+        {
+            //set 500hz acquisition frequency
+            m_sensor.ScanRate = (enFixedScanRates)enFixedScanRates_CCS_ULTIMA.CCS_ULTIMA_500HZ;
+            //set averaging = 1 for acquisition
+            m_sensor.Averaging = 1;
+            return (true);
+        }
+
+        public bool StartAcquisition()
+        {
+            bool result = true;
+
+            if (m_sensor != null)
+            {
+                sError = m_sensor.StartAcquisition_Measurement(acqParamMeasurement);
+                if (sError != enSensorError.MCHR_ERROR_NONE)
+                {
+                   throw new StilException(string.Format("cExample : Error : StartAcquisition : {0}", sError.ToString()));
+                }
+            }
+            else
+            {
+                result = false;
+                throw new StilException ("cExample : Error : StartAcquisition (No sensor or bad sensor)");
+                
+            }
+            return (result);
         }
 
         public bool Close()

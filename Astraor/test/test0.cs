@@ -5,13 +5,11 @@ using System.Threading;
 using Microsoft.Win32;
 using System.Runtime.InteropServices;
 using STIL_NET;
-
-
 /*
-Example 0 Version 1.0 :
-	This example shows how to launche an acquisition of a finite number of data points (NB_POINTS) for CCS OPTIMA.
+Example 1 Version 1.0 :
+	This example shows how to launche a continuous acquisition for CCS ULTIMA.
 	This example does not wait for any trigger.
-	It uses a library (.NET) that facilitates programming of the acquisition.	
+	It uses a library (.NET) that facilitates programming of the acquisition.
 */
 
 
@@ -26,8 +24,10 @@ namespace Example_0
         {
             ConsoleKeyInfo KeyResult;
 
-            Console.WriteLine("This example in C# shows how to launche an acquisition of a finite number of data points (NB_POINTS) for CCS OPTIMA.(Version 1.0).");
-            Console.WriteLine("This example does not wait for any trigger.\n");
+            Console.WriteLine("This example in C# shows how to launche a continuous acquisition for CCS ULTIMA (Version 1.0).");
+            Console.WriteLine("This example does not wait for any trigger.");
+            Console.WriteLine("The sensor is set to Altitude measuring mode.");
+            Console.WriteLine("During acquisition press any key to exit, otherwise acquisition will last forever (infinite number of points).\n");
 
             cExample m_Example = new cExample();
             if (m_Example != null)
@@ -36,7 +36,7 @@ namespace Example_0
                 if (m_Example.Init())
                 {
                     Console.WriteLine("Open Sensor (please wait)");
-                    if (m_Example.Open(enSensorType.CCS_OPTIMA))
+                    if (m_Example.Open(enSensorType.CCS_ULTIMA))
                     {
                         Console.WriteLine("Set acquisition parameters");
                         m_Example.SetParameter();
@@ -82,7 +82,7 @@ namespace Example_0
     public class cExample
     {
         //number of points to acquire
-        static uint number_of_points = 30;
+        static uint buffer_length = 20;
         //number of buffers to acquire
         static uint number_of_buffers = 5;
 
@@ -134,10 +134,8 @@ namespace Example_0
                 //get automatic parameters
                 if (acqParamMeasurement.Init(m_sensor) == enSensorError.MCHR_ERROR_NONE)
                 {
-                    // Set number of points to acquire (should be > 0)
-                    acqParamMeasurement.NumberOfPoints = number_of_points;
                     // Set buffer size (should be > 0)
-                    acqParamMeasurement.BufferLength = number_of_points;
+                    acqParamMeasurement.BufferLength = buffer_length;
                     // Set Number of acquisition buffers per data (should be > 1)
                     acqParamMeasurement.NumberOfBuffers = number_of_buffers;
                     //set altitude and counter buffering enabled
@@ -146,7 +144,7 @@ namespace Example_0
                     //set timeout acquisition : should be at least = ((BufferLength * averaging) / rate) + 100
                     acqParamMeasurement.Timeout = 2000;
                     //event type (here end of measurements) and callback function
-                    acqParamMeasurement.EnableEvent.EventEndMeasurement = true;
+                    acqParamMeasurement.EnableEvent.EventEndBuffer = true;
                     m_sensor.OnEventMeasurement += new sensor.OnEventMeasurementHandler(FuncEventMeasurement);
                 }
                 else
@@ -223,8 +221,8 @@ namespace Example_0
         //---------------------------------------------------------------------------------
         public bool SetParameter()
         {
-            //set 100hz acquisition frequency
-            m_sensor.ScanRate = (enFixedScanRates)enFixedScanRates_CCS_OPTIMA.CCS_OPTIMA_100HZ;
+            //set 500hz acquisition frequency
+            m_sensor.ScanRate = (enFixedScanRates)enFixedScanRates_CCS_ULTIMA.CCS_ULTIMA_500HZ;
             //set averaging = 1 for acquisition
             m_sensor.Averaging = 1;
             return (true);
