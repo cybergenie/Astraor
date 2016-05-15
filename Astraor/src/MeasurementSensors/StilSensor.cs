@@ -1,19 +1,21 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
+using System.Threading;
 using STIL_NET;
+
 
 namespace MeasurementSensors
 {
     public class StilSensor
     {
-        public delegate void SensorStatusHandler(object sender,EventArgs e);
+        public delegate void SensorStatusHandler(object sender, EventArgs e);
         public event SensorStatusHandler OnSensorStatus;
 
         private uint buffer_length = 0;
-        private uint number_of_buffers = 0; 
+        private uint number_of_buffers = 0;
         private string sensorStatus = null;
         private dll_chr m_dll_chr = null;
         private sensor m_sensor = null;
@@ -24,6 +26,13 @@ namespace MeasurementSensors
         private cNamedEvent m_exit_event = new cNamedEvent();
         private cNamedEvent m_exit_event_do = new cNamedEvent();
 
+        public struct SensorValue
+        {
+            public float Altitude;
+            public float Counter;
+        }
+
+        private List<SensorValue> sensorValueList = new List<SensorValue>();
 
         public string SensorStatus
         {
@@ -34,6 +43,11 @@ namespace MeasurementSensors
                 OnSensorStatus(this, new EventArgs());
             }
 
+        }
+
+        public List<SensorValue> SensorValueList
+        {
+            get { return sensorValueList; }
         }
 
         public uint BufferLength
@@ -55,7 +69,7 @@ namespace MeasurementSensors
             if (m_dll_chr.Init() == false)
             {
                 return false;
-                throw new StilException("传感器连接错误。");                
+                throw new StilException("传感器连接错误。");
             }
             return true;
         }
@@ -96,10 +110,10 @@ namespace MeasurementSensors
                     m_sensor.OnEventMeasurement += new sensor.OnEventMeasurementHandler(FuncEventMeasurement);
                 }
                 else
-                        {
-                        Close();
-                        result = false;
-                        throw new StilException("驱动初始化失败。");
+                {
+                    Close();
+                    result = false;
+                    throw new StilException("驱动初始化失败。");
 
                 }
             }
@@ -110,6 +124,43 @@ namespace MeasurementSensors
             }
             return (result);
 
+        }
+
+        public void Execute()
+        {
+            float[] Altitude = new float[acqParamMeasurement.BufferLength];
+            float[] Counter = new float[acqParamMeasurement.BufferLength];
+            float[] Intensity = new float[acqParamMeasurement.BufferLength];
+            float[] BufferNullFloat = null;
+            uint Len = 0;
+
+            while (m_exit_event.Wait(0) == false)
+            {
+                if (m_measurement_event.Wait(10))
+                {
+                    sError = m_sensor.GetAltitudeAcquisitionData(ref Altitude, ref Intensity, ref Counter, ref BufferNullFloat, ref BufferNullFloat, ref Len);
+                    if (sError == enSensorError.MCHR_ERROR_NONE)
+                    {
+                        for (uint idx = 0; idx < Len; idx++)
+                        {
+                            SensorValue temp = new SensorValue();
+                            temp.Altitude = Altitude[idx];
+                            temp.Counter = Intensity[idx];
+                            sensorValueList.Add(temp);
+                        }
+                    }
+                    else
+                    {
+                        throw new StilException(string.Format("FuncEventMeasurement : 错误 : GetAltitudeAcquisitionData : {0}", sError.ToString()));
+                    }
+                }
+            }
+            m_exit_event_do.Set();
+        }
+
+        public bool EndExecute()
+        {
+            return (m_exit_event_do.Wait(10));
         }
 
         void OnError(object sender, cErrorEventArgs e)
@@ -134,13 +185,13 @@ namespace MeasurementSensors
                 default:
                     break;
             }
-           throw new StilException(string.Format("Event : {0}", ev.ToString()));
+            // throw new StilException(string.Format("事件 : {0}", ev.ToString()));
         }
 
         public bool SetParameter()
         {
             //set 500hz acquisition frequency
-            m_sensor.ScanRate = (enFixedScanRates)enFixedScanRates_CCS_ULTIMA.CCS_ULTIMA_500HZ;
+            m_sensor.ScanRate = (enFixedScanRates)enFixedScanRates_CCS_OPTIMA.CCS_OPTIMA_1000HZ;
             //set averaging = 1 for acquisition
             m_sensor.Averaging = 1;
             return (true);
@@ -155,14 +206,30 @@ namespace MeasurementSensors
                 sError = m_sensor.StartAcquisition_Measurement(acqParamMeasurement);
                 if (sError != enSensorError.MCHR_ERROR_NONE)
                 {
-                   throw new StilException(string.Format("cExample : Error : StartAcquisition : {0}", sError.ToString()));
+                    throw new StilException(string.Format("错误 : StartAcquisition : {0}", sError.ToString()));
                 }
             }
             else
             {
                 result = false;
-                throw new StilException ("cExample : Error : StartAcquisition (No sensor or bad sensor)");
-                
+                throw new StilException("错误(StartAcquisition) : 开始测量异常， 没有连接传感器或传感器损坏,请检查传感器。");
+
+            }
+            return (result);
+        }
+
+        public bool StopAcquisition()
+        {
+            bool result = true;
+
+            if (m_sensor != null)
+            {
+                m_sensor.StopAcquisition_Measurement();
+            }
+            else
+            {
+                result = false;
+                throw new StilException("错误(StopAcquisition) : 停止数据测量异常，没有连接传感器或传感器损坏,请检查传感器。");
             }
             return (result);
         }
@@ -178,15 +245,16 @@ namespace MeasurementSensors
             else
             {
                 result = false;
-                throw new StilException("错误 : 关闭传感器异常,没有连接传感器或传感器损坏,请检查传感器。");                
+                throw new StilException("错误(Close) : 关闭传感器异常,没有连接传感器或传感器损坏,请检查传感器。");
             }
             return (result);
         }
     }
 
-    public class StilException: ApplicationException
+    public class StilException : ApplicationException
     {
-        public StilException(string message ):base(message)
+        public StilException(string message) : base(message)
         { }
-    } 
+    }
+
 }
