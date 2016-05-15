@@ -53,7 +53,8 @@
             </StatusBar>
         </DockPanel>
         <DockPanel Grid.Column="1" Grid.Row="2" LastChildFill="False">
-            <Button x:Name="button" Content="Button" VerticalAlignment="Top" Margin="10,10,0,0" Click="OnClick"/>
+            <Button x:Name="btStart" Content="Start" DockPanel.Dock="Top" Width="75" Height="24" Margin="50,10,0,0" Click="OnStartClick"/>
+            <Button x:Name="btStop" Content="Stop" Height="24" Width="75" DockPanel.Dock="Bottom" Margin="50,0,0,20" Click="OnStopClick"/>
         </DockPanel>
     </Grid>
 </Window>
