@@ -18,7 +18,7 @@ namespace MeasurementSensors
         private uint number_of_buffers = 0;
         private string sensorStatus = null;
         private dll_chr m_dll_chr = null;
-        private sensor m_sensor = null;
+        private sensorCCSPrima m_sensor = null;
         private enSensorError sError = enSensorError.MCHR_ERROR_NONE;
         private sensorManager m_sensor_manager = new sensorManager();
         private cAcqParamMeasurement acqParamMeasurement = new cAcqParamMeasurement();
@@ -89,7 +89,7 @@ namespace MeasurementSensors
             bool result = true;
 
             //open sensor
-            m_sensor = m_sensor_manager.OpenUsbConnection("", sensorType, null, null);
+            m_sensor = (sensorCCSPrima) m_sensor_manager.OpenUsbConnection("", sensorType, null, null);
             if (m_sensor != null)
             {
                 m_sensor.OnError += new sensor.ErrorHandler(OnError);
@@ -104,7 +104,7 @@ namespace MeasurementSensors
                     acqParamMeasurement.EnableBufferAltitude.Altitude = true;
                     acqParamMeasurement.EnableBufferAltitude.Counter = true;
                     //set timeout acquisition : should be at least = ((BufferLength * averaging) / rate) + 100
-                    acqParamMeasurement.Timeout = 2000;
+                    acqParamMeasurement.Timeout = 2000;                    
                     //event type (here end of measurements) and callback function
                     acqParamMeasurement.EnableEvent.EventEndBuffer = true;
                     m_sensor.OnEventMeasurement += new sensor.OnEventMeasurementHandler(FuncEventMeasurement);
@@ -191,9 +191,11 @@ namespace MeasurementSensors
         public bool SetParameter()
         {
             //set 500hz acquisition frequency
-            m_sensor.ScanRate = (enFixedScanRates)enFixedScanRates_CCS_OPTIMA.CCS_OPTIMA_1000HZ;
+            m_sensor.ScanRate = (enFixedScanRates_CCS_PRIMA)enFixedScanRates_CCS_PRIMA.CCS_PRIMA_1000HZ;
             //set averaging = 1 for acquisition
             m_sensor.Averaging = 1;
+            m_sensor.LedAuto = false;
+            m_sensor.LedBrightness = 50;      
             return (true);
         }
 

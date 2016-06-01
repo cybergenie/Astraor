@@ -20,7 +20,7 @@ namespace MeasurementSensors
 
             if (Sensor != null)
                 if (Sensor.Init())
-                    if (Sensor.OpenNoTrigger(enSensorType.CCS_OPTIMA))
+                    if (Sensor.OpenNoTrigger(enSensorType.CCS_PRIMA))
                     {
                         Sensor.SetParameter();
                         if (Sensor.StartAcquisition())
