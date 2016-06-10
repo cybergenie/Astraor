@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Windows.Forms;
 using System.Threading;
 using STIL_NET;
 
@@ -25,6 +26,7 @@ namespace MeasurementSensors
         private cNamedEvent m_measurement_event = new cNamedEvent();
         private cNamedEvent m_exit_event = new cNamedEvent();
         private cNamedEvent m_exit_event_do = new cNamedEvent();
+        public StilException StilEx = null;
 
         public struct SensorValue
         {
@@ -64,14 +66,29 @@ namespace MeasurementSensors
 
         public bool Init()
         {
-            m_dll_chr = new dll_chr();
+            bool status = true;
+            try {
+                m_dll_chr = new dll_chr();
 
-            if (m_dll_chr.Init() == false)
-            {
-                return false;
-                throw new StilException("传感器连接错误。");
+                if (m_dll_chr.Init() == false)
+                {
+                    throw new StilException("Init:传感器连接错误。");                    
+                }
+
             }
-            return true;
+            catch(StilException ex)
+            {
+                status = false;
+                MessageBox.Show(ex.ToString());
+            }
+
+            catch
+            {
+                status = false;               
+            }
+            return status;
+
+
         }
 
         public bool Release()
@@ -89,39 +106,53 @@ namespace MeasurementSensors
             bool result = true;
 
             //open sensor
-            m_sensor = (sensorCCSPrima) m_sensor_manager.OpenUsbConnection("", sensorType, null, null);
-            if (m_sensor != null)
+            try
             {
-                m_sensor.OnError += new sensor.ErrorHandler(OnError);
-                //    //get automatic parameters
-                if (acqParamMeasurement.Init(m_sensor) == enSensorError.MCHR_ERROR_NONE)
+                m_sensor = (sensorCCSPrima)m_sensor_manager.OpenUsbConnection("", sensorType, null, null);
+                if (m_sensor != null)
                 {
-                    // Set buffer size (should be > 0)
-                    acqParamMeasurement.BufferLength = buffer_length;
-                    // Set Number of acquisition buffers per data (should be > 1)
-                    acqParamMeasurement.NumberOfBuffers = number_of_buffers;
-                    //set altitude and counter buffering enabled
-                    acqParamMeasurement.EnableBufferAltitude.Altitude = true;
-                    acqParamMeasurement.EnableBufferAltitude.Counter = true;
-                    //set timeout acquisition : should be at least = ((BufferLength * averaging) / rate) + 100
-                    acqParamMeasurement.Timeout = 2000;                    
-                    //event type (here end of measurements) and callback function
-                    acqParamMeasurement.EnableEvent.EventEndBuffer = true;
-                    m_sensor.OnEventMeasurement += new sensor.OnEventMeasurementHandler(FuncEventMeasurement);
+                    m_sensor.OnError += new sensor.ErrorHandler(OnError);
+                    //    //get automatic parameters
+                    if (acqParamMeasurement.Init(m_sensor) == enSensorError.MCHR_ERROR_NONE)
+                    {
+                        // Set buffer size (should be > 0)
+                        acqParamMeasurement.BufferLength = buffer_length;
+                        // Set Number of acquisition buffers per data (should be > 1)
+                        acqParamMeasurement.NumberOfBuffers = number_of_buffers;
+                        //set altitude and counter buffering enabled
+                        acqParamMeasurement.EnableBufferAltitude.Altitude = true;
+                        acqParamMeasurement.EnableBufferAltitude.Counter = true;
+                        //set timeout acquisition : should be at least = ((BufferLength * averaging) / rate) + 100
+                        acqParamMeasurement.Timeout = 2000;
+                        //event type (here end of measurements) and callback function
+                        acqParamMeasurement.EnableEvent.EventEndBuffer = true;
+                        m_sensor.OnEventMeasurement += new sensor.OnEventMeasurementHandler(FuncEventMeasurement);
+                    }
+                    else
+                    {
+                        Close();
+                        throw new StilException("驱动初始化失败。");                        
+
+                    }
                 }
                 else
                 {
-                    Close();
-                    result = false;
-                    throw new StilException("驱动初始化失败。");
-
+                    throw new StilException("错误(OpenNoTrigger) : 打开传感器失败,没有连接传感器或传感器损坏,请检查传感器。");
+                    
                 }
+
             }
-            else
+
+            catch (StilException ex)
             {
                 result = false;
-                throw new StilException("错误 : 打开传感器失败,没有连接传感器或传感器损坏,请检查传感器。");
+                MessageBox.Show(ex.ToString());
             }
+            catch
+            {
+                result = false;
+            }
+
             return (result);
 
         }
@@ -136,23 +167,36 @@ namespace MeasurementSensors
 
             while (m_exit_event.Wait(0) == false)
             {
-                if (m_measurement_event.Wait(10))
+                try
                 {
-                    sError = m_sensor.GetAltitudeAcquisitionData(ref Altitude, ref Intensity, ref Counter, ref BufferNullFloat, ref BufferNullFloat, ref Len);
-                    if (sError == enSensorError.MCHR_ERROR_NONE)
+                    if (m_measurement_event.Wait(10))
                     {
-                        for (uint idx = 0; idx < Len; idx++)
+                        sError = m_sensor.GetAltitudeAcquisitionData(ref Altitude, ref Intensity, ref Counter, ref BufferNullFloat, ref BufferNullFloat, ref Len);
+                        if (sError == enSensorError.MCHR_ERROR_NONE)
                         {
-                            SensorValue temp = new SensorValue();
-                            temp.Altitude = Altitude[idx];
-                            temp.Counter = Intensity[idx];
-                            sensorValueList.Add(temp);
+                            for (uint idx = 0; idx < Len; idx++)
+                            {
+                                SensorValue temp = new SensorValue();
+                                temp.Altitude = Altitude[idx];
+                                temp.Counter = Intensity[idx];
+                                sensorValueList.Add(temp);
+                            }
+                        }
+                        else
+                        {
+                            throw new StilException(string.Format("FuncEventMeasurement : 错误 : GetAltitudeAcquisitionData : {0}", sError.ToString()));
                         }
                     }
-                    else
-                    {
-                        throw new StilException(string.Format("FuncEventMeasurement : 错误 : GetAltitudeAcquisitionData : {0}", sError.ToString()));
-                    }
+                }
+
+                catch(StilException ex)
+                {
+                    MessageBox.Show(ex.ToString());
+                }
+
+                catch
+                {
+                    m_exit_event_do.Set();
                 }
             }
             m_exit_event_do.Set();
@@ -165,7 +209,7 @@ namespace MeasurementSensors
 
         void OnError(object sender, cErrorEventArgs e)
         {
-            throw new StilException(string.Format("错误:{0}-{1}{2}", e.Exception.ErrorType, e.Exception.FunctionName, e.Exception.ErrorDetail));
+            MessageBox.Show(string.Format("错误:{0}-{1}{2}", e.Exception.ErrorType, e.Exception.FunctionName, e.Exception.ErrorDetail));
         }
 
         public void FuncEventMeasurement(sensor.enSensorAcquisitionEvent ev)
@@ -202,20 +246,31 @@ namespace MeasurementSensors
         public bool StartAcquisition()
         {
             bool result = true;
-
-            if (m_sensor != null)
+            try
             {
-                sError = m_sensor.StartAcquisition_Measurement(acqParamMeasurement);
-                if (sError != enSensorError.MCHR_ERROR_NONE)
+                if (m_sensor != null)
                 {
-                    throw new StilException(string.Format("错误 : StartAcquisition : {0}", sError.ToString()));
+                    sError = m_sensor.StartAcquisition_Measurement(acqParamMeasurement);
+                    if (sError != enSensorError.MCHR_ERROR_NONE)
+                    {
+                        throw new StilException(string.Format("错误 : StartAcquisition : {0}", sError.ToString()));
+                    }
+                }
+                else
+                {
+                    throw new StilException("错误(StartAcquisition) : 开始测量异常， 没有连接传感器或传感器损坏,请检查传感器。");
+                    
                 }
             }
-            else
+
+            catch(StilException ex)
             {
                 result = false;
-                throw new StilException("错误(StartAcquisition) : 开始测量异常， 没有连接传感器或传感器损坏,请检查传感器。");
-
+                MessageBox.Show(ex.ToString());
+            }
+            catch 
+            {
+                result = false;
             }
             return (result);
         }
@@ -223,15 +278,26 @@ namespace MeasurementSensors
         public bool StopAcquisition()
         {
             bool result = true;
-
-            if (m_sensor != null)
+            try
             {
-                m_sensor.StopAcquisition_Measurement();
+                if (m_sensor != null)
+                {
+                    m_sensor.StopAcquisition_Measurement();
+                }
+                else
+                {
+                    throw new StilException("错误(StopAcquisition) : 停止数据测量异常，没有连接传感器或传感器损坏,请检查传感器。");
+                   
+                }
             }
-            else
+            catch(StilException ex)
             {
                 result = false;
-                throw new StilException("错误(StopAcquisition) : 停止数据测量异常，没有连接传感器或传感器损坏,请检查传感器。");
+                MessageBox.Show(ex.ToString());
+            }
+            catch
+            {
+                result = false;
             }
             return (result);
         }
@@ -240,15 +306,31 @@ namespace MeasurementSensors
         {
             bool result = true;
 
-            if (m_sensor != null)
+            try
             {
-                m_sensor.Close();
+
+                if (m_sensor != null)
+                {
+                    m_sensor.Close();
+                }
+                else
+                {
+                    throw new StilException("错误(Close) : 关闭传感器异常,没有连接传感器或传感器损坏,请检查传感器。");
+                    
+                }
+
             }
-            else
+
+            catch(StilException ex)
             {
                 result = false;
-                throw new StilException("错误(Close) : 关闭传感器异常,没有连接传感器或传感器损坏,请检查传感器。");
+                MessageBox.Show(ex.ToString());
             }
+            catch
+            {
+                result = false;
+            }
+
             return (result);
         }
     }
