@@ -79,7 +79,7 @@ namespace MeasurementSensors
             catch(StilException ex)
             {
                 status = false;
-                MessageBox.Show(ex.ToString());
+                MessageBox.Show(ex.Message);
             }
 
             catch
@@ -146,7 +146,7 @@ namespace MeasurementSensors
             catch (StilException ex)
             {
                 result = false;
-                MessageBox.Show(ex.ToString());
+                MessageBox.Show(ex.Message);
             }
             catch
             {
@@ -191,7 +191,7 @@ namespace MeasurementSensors
 
                 catch(StilException ex)
                 {
-                    MessageBox.Show(ex.ToString());
+                    MessageBox.Show(ex.Message);
                 }
 
                 catch
@@ -266,7 +266,7 @@ namespace MeasurementSensors
             catch(StilException ex)
             {
                 result = false;
-                MessageBox.Show(ex.ToString());
+                MessageBox.Show(ex.Message);
             }
             catch 
             {
@@ -293,7 +293,7 @@ namespace MeasurementSensors
             catch(StilException ex)
             {
                 result = false;
-                MessageBox.Show(ex.ToString());
+                MessageBox.Show(ex.Message);
             }
             catch
             {
@@ -324,7 +324,7 @@ namespace MeasurementSensors
             catch(StilException ex)
             {
                 result = false;
-                MessageBox.Show(ex.ToString());
+                MessageBox.Show(ex.Message);
             }
             catch
             {
